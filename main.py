@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+import os
 from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
@@ -5,7 +7,10 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
 
-DATABASE_URL = "postgresql://admin:admin123@localhost:5432/mydb"
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set")
 
 # SQLAlchemy setup
 engine = create_engine(DATABASE_URL)
