@@ -1,20 +1,12 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from pydantic import BaseModel
 
-# Input model for creating/updating a user
 class UserCreate(BaseModel):
     username: str
-    email: EmailStr
-    full_name: Optional[str] = None
+    email: str
+    full_name: str
 
-# Output model for API responses
 class UserResponse(UserCreate):
-    id: str
+    id: int
 
-    model_config = {
-        "from_attributes": True  # Pydantic v2 compatible
-    }
-
-# Optional: list of users response
-class UsersListResponse(BaseModel):
-    users: List[UserResponse]
+    class Config:
+        from_attributes = True

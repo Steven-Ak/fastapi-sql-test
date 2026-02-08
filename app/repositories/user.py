@@ -1,32 +1,27 @@
-from app.core.mongo import db
-from bson import ObjectId
+from sqlalchemy.orm import Session
+from app.models.user import User
 
 class UserRepository:
-    def __init__(self):
-        self.collection = db["users"]
+    def __init__(self, db: Session):
+        self.db = db
 
-    async def create(self, user_data: dict):
-        result = await self.collection.insert_one(user_data)
-        return {"id": str(result.inserted_id), **user_data}
+    def create(self, user: User):
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
 
-    async def get_all(self):
-        cursor = self.collection.find({})
-        users = await cursor.to_list(length=100)
-        # convert ObjectId to string
-        return [{"id": str(u["_id"]), **{k:v for k,v in u.items() if k!="_id"}} for u in users]
+    def get_by_id(self, user_id: int):
+        return self.db.query(User).filter(User.id == user_id).first()
 
-    async def get_by_id(self, user_id: str):
-        user = await self.collection.find_one({"_id": ObjectId(user_id)})
-        if not user:
-            return None
-        return {"id": str(user["_id"]), **{k:v for k,v in user.items() if k!="_id"}}
+    def get_all(self):
+        return self.db.query(User).all()
+    
+    def update(self, user: User):
+        self.db.commit()
+        self.db.refresh(user)
+        return user
 
-    async def update(self, user_id: str, user_data: dict):
-        result = await self.collection.update_one(
-            {"_id": ObjectId(user_id)}, {"$set": user_data}
-        )
-        return result.modified_count
-
-    async def delete(self, user_id: str):
-        result = await self.collection.delete_one({"_id": ObjectId(user_id)})
-        return result.deleted_count
+    def delete(self, user: User):
+        self.db.delete(user)
+        self.db.commit()
