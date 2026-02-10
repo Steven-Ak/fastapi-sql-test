@@ -5,6 +5,10 @@ class ItemCreate(BaseModel):
     name: str
     description: Optional[str] = None
 
+class ItemUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
 class ItemResponse(ItemCreate):
     id: int
 

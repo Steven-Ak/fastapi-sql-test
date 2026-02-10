@@ -1,6 +1,6 @@
 from app.services.base_service import BaseService
 from app.repositories.item_repository import ItemRepository
-from app.schemas.item_schema import ItemCreate
+from app.schemas.item_schema import ItemCreate, ItemUpdate
 from app.models.item_model import Item
 from sqlalchemy.exc import IntegrityError
 from app.core.exceptions import DuplicateException
@@ -26,6 +26,16 @@ class ItemService(BaseService[Item]):
         item = self.get_by_id(item_id)
         item.name = data.name
         item.description = data.description
+        try:
+            return self.repo.update(item)
+        except IntegrityError:
+            raise DuplicateException("Item", "name")
+    
+    def patch_item(self, item_id: int, data: ItemUpdate):
+        item = self.get_by_id(item_id)
+        update_data = data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(item, key, value)
         try:
             return self.repo.update(item)
         except IntegrityError:
