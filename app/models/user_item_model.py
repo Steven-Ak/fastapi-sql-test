@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
-from app.core.database import Base
+from app.clients.database_clients import Base
 
 class UserItem(Base):
     __tablename__ = "user_items"
