@@ -13,14 +13,10 @@ from app.services.chat_service import ChatService
 from app.repositories.chat_repository import ChatRepository
 from app.models.user_model import User
 from app.api.auth_deps import get_current_user
+from app.api.service_deps import get_chat_service
 from app.clients.database_clients import get_db
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
-
-
-def get_chat_service(db: Session = Depends(get_db)) -> ChatService:
-    return ChatService(ChatRepository(db))
-
 
 @router.post("/", response_model=ChatResponse)
 def chat(
