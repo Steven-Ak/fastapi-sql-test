@@ -8,9 +8,15 @@ class Settings(BaseSettings):
     SUPABASE_KEY: str
     SUPABASE_DB_URL: str
 
+    # Controlling the model's context window and summarization behavior
+    SUMMARIZE_THRESHOLD: int = 6
+    KEEP_RECENT_MESSAGES: int = 3
+    MIN_MESSAGES_TO_SUMMARIZE: int = 2
+
     #LLM Config
     COHERE_API_KEY: str
-    DEFAULT_COHERE_MODEL: str = "command-r-08-2024"
+    DEFAULT_COHERE_MODEL: str = "command-r-plus-08-2024"
+    SUMMARIZATION_MODEL: str = "command-r-08-2024"
 
     model_config = SettingsConfigDict(
         env_file=".env",
