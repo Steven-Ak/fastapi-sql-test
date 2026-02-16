@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
 from app.models.chat_model import Chat, ChatMessageRecord
 
@@ -13,7 +14,7 @@ class ChatRepository:
         self.db.refresh(chat)
         return chat
 
-    def get_chat_by_id(self, chat_id: int) -> Optional[Chat]:
+    def get_chat_by_id(self, chat_id: UUID) -> Optional[Chat]:
         return (
             self.db.query(Chat)
             .options(joinedload(Chat.messages))
