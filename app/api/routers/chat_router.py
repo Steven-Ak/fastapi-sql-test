@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import UUID
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -14,7 +15,6 @@ from app.repositories.chat_repository import ChatRepository
 from app.models.user_model import User
 from app.auth.auth_deps import get_current_user
 from app.core.service_deps import get_chat_service
-from app.clients.database_clients import get_db
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -23,7 +23,6 @@ def chat(
     request: ChatRequest,
     current_user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
-    chat_id: Optional[int] = Query(default=None, description="Pass a chat_id to continue an existing conversation. Omit to start a new chat."),
 ):
     """
     Chat with the LLM.
@@ -33,7 +32,7 @@ def chat(
     
     """
     try:
-        return service.chat(request, user_id=current_user.id, chat_id=chat_id)
+        return service.chat(request, user_id=current_user.id, chat_id=request.chat_id)
     except Exception as e:
         if isinstance(e, HTTPException):
             raise
@@ -51,7 +50,7 @@ def list_chats(
 
 @router.get("/sessions/{chat_id}", response_model=ChatHistoryResponse)
 def get_chat_history(
-    chat_id: int,
+    chat_id: UUID,
     current_user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
 ):
@@ -61,7 +60,7 @@ def get_chat_history(
 
 @router.delete("/sessions/{chat_id}", status_code=204)
 def delete_chat(
-    chat_id: int,
+    chat_id: UUID,
     current_user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
 ):
