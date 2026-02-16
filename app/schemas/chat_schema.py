@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from enum import Enum
 from datetime import datetime
-
+from uuid import UUID
 
 class LLMProvider(str, Enum):
     COHERE = "cohere"
@@ -15,12 +15,13 @@ class MessageRole(str, Enum):
 
 
 class ChatMessage(BaseModel):
-    role: MessageRole
+    role: MessageRole = MessageRole.USER
     content: str
 
 
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
+    chat_id: Optional[UUID] = Field(default=None, description="Pass a chat_id to continue an existing conversation. Omit to start a new chat.")
     provider: LLMProvider = LLMProvider.COHERE
     model: Optional[str] = None  # If None, uses default for provider
     temperature: float = Field(default=0.7, ge=0, le=1)
@@ -30,10 +31,11 @@ class ChatRequest(BaseModel):
         json_schema_extra = {
             "example": {
                 "messages": [
-                    {"role": "user", "content": "What is Python?"}
+                    {"content": "What is Python?"}
                 ],
+                "chat_id": None,
                 "provider": "cohere",
-                "model": "command-r-08-2024",
+                "model": "command-r-plus-08-2024",
                 "temperature": 0.7,
                 "max_tokens": 1000
             }
@@ -66,7 +68,7 @@ class ChatResponse(BaseModel):
     """Comprehensive chat response with all metadata"""
     
     # Chat session
-    chat_id: int = Field(description="The chat session ID (new or existing)")
+    chat_id: UUID = Field(description="The chat session UUID (new or existing)")
     
     # Core response
     response: str = Field(description="The actual text response from the LLM")
@@ -129,7 +131,7 @@ class ChatMessageOut(BaseModel):
 
 class ChatSessionResponse(BaseModel):
     """Chat session metadata (for listing chats)"""
-    id: int
+    id: UUID
     title: Optional[str] = None
     created_at: datetime
     updated_at: datetime
@@ -140,7 +142,7 @@ class ChatSessionResponse(BaseModel):
 
 class ChatHistoryResponse(BaseModel):
     """Full chat history with all messages"""
-    id: int
+    id: UUID
     title: Optional[str] = None
     created_at: datetime
     updated_at: datetime
