@@ -13,7 +13,7 @@ class SupabaseStorage:
 
     def upload_pdf_and_get_signed_url(self, user_id, chat_id, file_bytes: bytes, original_name: str) -> str:
         ext = original_name.split(".")[-1]
-        path = f"user_{user_id}/chat_{chat_id}/{uuid.uuid4()}.{ext}"
+        path = f"{user_id}/{chat_id}/{uuid.uuid4()}.{ext}"
 
         self.client.storage.from_(self.bucket).upload(
             path,
