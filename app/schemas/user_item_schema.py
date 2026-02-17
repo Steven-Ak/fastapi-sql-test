@@ -1,11 +1,12 @@
+from uuid import UUID
 from pydantic import BaseModel
 
 class UserItemCreate(BaseModel):
-    user_id: int
-    item_id: int
+    user_id: UUID
+    item_id: UUID
 
 class UserItemResponse(UserItemCreate):
-    id: int
+    id: UUID
 
     class Config:
         from_attributes = True

@@ -1,3 +1,4 @@
+from uuid import UUID
 from app.services.base_service import BaseService
 from app.repositories.user_item_repository import UserItemRepository
 from app.schemas.user_item_schema import UserItemCreate
@@ -16,8 +17,8 @@ class UserItemService(BaseService[UserItem]):
         except IntegrityError:
             raise DuplicateException("UserItem", "user_id and item_id combination")
     
-    def get_user_items(self, user_id: int):
+    def get_user_items(self, user_id: UUID):
         return self.repo.get_items_by_user(user_id)
     
-    def get_item_users(self, item_id: int):
+    def get_item_users(self, item_id: UUID):
         return self.repo.get_users_by_item(item_id)

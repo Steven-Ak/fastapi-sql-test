@@ -22,7 +22,7 @@ class ChatRepository:
             .first()
         )
 
-    def get_chats_by_user(self, user_id: int) -> List[Chat]:
+    def get_chats_by_user(self, user_id: UUID) -> List[Chat]:
         return (
             self.db.query(Chat)
             .filter(Chat.user_id == user_id)

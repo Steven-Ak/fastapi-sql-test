@@ -1,3 +1,4 @@
+from uuid import UUID
 from pydantic import BaseModel
 from typing import Optional
 
@@ -14,7 +15,7 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
 
 class UserResponse(BaseModel):
-    id: int
+    id: UUID
     username: str
     email: str
     full_name: str
@@ -29,4 +30,4 @@ class Token(BaseModel):
 
 # Token data
 class TokenData(BaseModel):
-    id: Optional[int] = None
+    id: Optional[UUID] = None

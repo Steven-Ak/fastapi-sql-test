@@ -1,3 +1,4 @@
+from uuid import UUID
 from pydantic import BaseModel
 from typing import Optional
 
@@ -10,7 +11,7 @@ class ItemUpdate(BaseModel):
     description: Optional[str] = None
 
 class ItemResponse(ItemCreate):
-    id: int
+    id: UUID
 
     class Config:
         from_attributes = True

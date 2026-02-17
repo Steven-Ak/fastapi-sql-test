@@ -17,7 +17,7 @@ class BaseRepository(Generic[T]):
     def get_all(self):
         return self.db.query(self.model).all()
 
-    def get_by_id(self, obj_id: int):
+    def get_by_id(self, obj_id: T):
         return self.db.query(self.model).filter(
             self.model.id == obj_id
         ).first()

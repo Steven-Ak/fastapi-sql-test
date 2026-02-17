@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends
 from typing import List
 
@@ -22,14 +23,14 @@ def read_all(
 
 @router.get("/{item_id}", response_model=ItemResponse)
 def read_one(
-    item_id: int,
+    item_id: UUID,
     service: ItemService = Depends(get_item_service),
 ):
     return service.get_item(item_id)
 
 @router.put("/{item_id}", response_model=ItemResponse)
 def update(
-    item_id: int,
+    item_id: UUID,
     item: ItemCreate,
     service: ItemService = Depends(get_item_service),
 ):
@@ -37,7 +38,7 @@ def update(
 
 @router.patch("/{item_id}", response_model=ItemResponse)
 def patch(
-    item_id: int,
+    item_id: UUID,
     item: ItemUpdate,
     service: ItemService = Depends(get_item_service),
 ):
@@ -45,7 +46,7 @@ def patch(
 
 @router.delete("/{item_id}")
 def delete(
-    item_id: int,
+    item_id: UUID,
     service: ItemService = Depends(get_item_service),
 ):
     service.delete_item(item_id)

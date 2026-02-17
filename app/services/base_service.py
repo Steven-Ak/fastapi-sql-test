@@ -11,13 +11,13 @@ class BaseService(Generic[T]):
     def get_all(self):
         return self.repo.get_all()
 
-    def get_by_id(self, entity_id: int) -> T:
+    def get_by_id(self, entity_id: T) -> T:
         entity = self.repo.get_by_id(entity_id)
         if not entity:
             raise NotFoundException(self.model.__name__)
         return entity
 
-    def delete(self, entity_id: int) -> bool:
+    def delete(self, entity_id: T) -> bool:
         entity = self.get_by_id(entity_id)
         self.repo.delete(entity)
         return True
