@@ -1,7 +1,8 @@
 from typing import List, Dict, Optional, Any
 import cohere
 from app.clients.llm_clients.llm_base_client import BaseLLMClient
-
+from app.core.config import settings
+import base64
 
 class CohereClient(BaseLLMClient):
     """Cohere LLM client implementation"""
@@ -9,9 +10,11 @@ class CohereClient(BaseLLMClient):
     def __init__(self, api_key: str, model: str = "command-r-08-2024"):
         super().__init__(api_key, model)
         self.client = cohere.Client(api_key)
+        self.client_v2 = cohere.ClientV2(api_key)
         self._available_models = [
-            "command-r-plus-08-2024",
-            "command-r-08-2024",
+            settings.DEFAULT_COHERE_MODEL,
+            settings.SUMMARIZATION_MODEL,
+            settings.VISION_MODEL,
         ]
     
     def chat(
@@ -128,6 +131,45 @@ class CohereClient(BaseLLMClient):
     def stream_chat(self, messages: List[Dict[str, str]], temperature: float = 0.7, max_tokens: Optional[int] = None, **kwargs):
         """Streaming disabled for now"""
         raise NotImplementedError("Streaming is not implemented yet")
+    
+    def answer_image(
+        self,
+        image_bytes: bytes,
+        mime_type: str,
+        prompt: str,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = 1000,
+    ) -> Dict[str, Any]:
+        """Use Cohere's vision model to answer questions about an image"""
+        
+        b64 = base64.b64encode(image_bytes).decode("utf-8")
+        
+        response = self.client_v2.chat(
+            model=settings.VISION_MODEL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "image": f"data:{mime_type};base64,{b64}"
+                        },
+                        {
+                            "type": "text",
+                            "text": prompt
+                        }
+                    ]
+                }
+            ],
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+    
+        return {
+            "text": response.message.content[0].text,
+            "generation_id": response.id,
+            "finish_reason": response.finish_reason,
+        }
     
     @property
     def available_models(self) -> List[str]:

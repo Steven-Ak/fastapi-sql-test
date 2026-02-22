@@ -1,5 +1,6 @@
 from typing import List, Optional
 from uuid import UUID
+import uuid
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
 import json
@@ -12,6 +13,7 @@ from app.schemas.chat_schema import (
     ChatResponse, 
     ChatSessionResponse, 
     ChatHistoryResponse,
+    ImageDescribeResponse,
     LLMProvider,
 )
 from app.services.chat_service import ChatService
@@ -19,6 +21,7 @@ from app.repositories.chat_repository import ChatRepository
 from app.models.user_model import User
 from app.auth.auth_deps import get_current_user
 from app.core.service_deps import get_chat_service
+from app.clients.llm_clients.llm_manager import get_cohere_client
 
 storage = SupabaseStorage()
 
@@ -97,6 +100,45 @@ async def chat(
             raise
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/describe-image", response_model=ImageDescribeResponse)
+async def answer_image(
+    file: UploadFile = File(...),
+    prompt: str = Form("Describe this image in detail."),
+    current_user: User = Depends(get_current_user),
+):
+    """Upload an image and get a description from Cohere's vision model"""
+    
+    ALLOWED = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+    if file.content_type not in ALLOWED:
+        raise HTTPException(status_code=400, detail=f"Unsupported type: {file.content_type}")
+    
+    try:
+        contents = await file.read()
+        
+        # Get description from vision model        
+        client = get_cohere_client()
+        result = client.answer_image(
+            image_bytes=contents,
+            mime_type=file.content_type,
+            prompt=prompt,
+        )
+        
+        # Upload to images bucket
+        file_id = uuid.uuid4()
+        file_url = storage.upload_image_and_get_signed_url(
+            current_user.id, 
+            file_id, 
+            contents, 
+            file.filename
+        )
+        
+        return ImageDescribeResponse(
+            description=result["text"],
+            file_url=file_url,
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/sessions", response_model=List[ChatSessionResponse])
 def list_chats(
