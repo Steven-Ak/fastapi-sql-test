@@ -152,3 +152,8 @@ class ChatHistoryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ImageDescribeResponse(BaseModel):
+    description: str
+    file_url: str
+    model: str = Field(default="command-a-vision-07-2025")
