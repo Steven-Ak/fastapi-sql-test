@@ -24,3 +24,26 @@ class SupabaseStorage:
         signed = self.client.storage.from_(self.bucket).create_signed_url(path, 60 * 60)
 
         return signed["signedURL"]
+
+    def upload_image_and_get_signed_url(self, user_id, file_id, file_bytes: bytes, original_name: str) -> str:
+        """Upload image to the images bucket and return signed URL"""
+        ext = original_name.split(".")[-1].lower()
+        path = f"{user_id}/{file_id}.{ext}"
+
+        content_type_map = {
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "png": "image/png",
+            "gif": "image/gif",
+            "webp": "image/webp",
+        }
+        content_type = content_type_map.get(ext, "image/jpeg")
+
+        self.client.storage.from_(settings.SUPABASE_IMG_BUCKET).upload(
+            path,
+            file_bytes,
+            {"content-type": content_type}
+        )
+
+        signed = self.client.storage.from_(settings.SUPABASE_IMG_BUCKET).create_signed_url(path, 60 * 60)
+        return signed["signedURL"]
