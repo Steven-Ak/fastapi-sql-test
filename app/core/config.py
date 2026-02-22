@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     SUPABASE_KEY: str
     SUPABASE_DB_URL: str
     SUPABASE_BUCKET: str
+    SUPABASE_IMG_BUCKET: str
     SUPABASE_SERVICE_ROLE_KEY: str
 
     # Controlling the model's context window and summarization behavior
@@ -19,6 +20,7 @@ class Settings(BaseSettings):
     COHERE_API_KEY: str
     DEFAULT_COHERE_MODEL: str = "command-r-plus-08-2024"
     SUMMARIZATION_MODEL: str = "command-r-08-2024"
+    VISION_MODEL: str = "command-a-vision-07-2025"
 
     model_config = SettingsConfigDict(
         env_file=".env",
