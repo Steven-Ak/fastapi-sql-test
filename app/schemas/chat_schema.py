@@ -157,3 +157,17 @@ class ImageDescribeResponse(BaseModel):
     description: str
     file_url: str
     model: str = Field(default="command-a-vision-07-2025")
+
+class EmbedRequest(BaseModel):
+    texts: List[str] = Field(..., description="List of texts to embed", min_length=1)
+    input_type: str = Field(
+        default="search_document",
+        description="Cohere input type: search_document, search_query, classification, clustering"
+    )
+
+class EmbedResponse(BaseModel):
+    embeddings: List[List[float]] = Field(description="List of embedding vectors")
+    model: str = Field(description="Model used for embedding")
+    input_type: str
+    texts_count: int = Field(description="Number of texts embedded")
+    embedding_dimension: int = Field(description="Dimension of each embedding vector")
