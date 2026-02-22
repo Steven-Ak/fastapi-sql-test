@@ -12,3 +12,4 @@ class User(Base):
     password_hash = Column(String, nullable=False)
 
     items = relationship("UserItem", back_populates="user", cascade="all, delete-orphan")
+    chats = relationship("Chat", back_populates="user", cascade="all, delete-orphan")

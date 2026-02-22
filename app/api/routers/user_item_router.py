@@ -3,7 +3,7 @@ from typing import List
 
 from app.schemas.user_item_schema import UserItemCreate, UserItemResponse
 from app.services.user_item_service import UserItemService
-from app.api.service_deps import get_user_item_service
+from app.core.service_deps import get_user_item_service
 
 router = APIRouter(prefix="/user-items", tags=["User Items"])
 

@@ -3,9 +3,11 @@ from sqlalchemy.orm import Session
 from enum import Enum
 
 from app.clients.database_clients import get_postgres_db, get_supabase_db
+from app.repositories.chat_repository import ChatRepository
 from app.repositories.item_repository import ItemRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.user_item_repository import UserItemRepository
+from app.services.chat_service import ChatService
 from app.services.item_service import ItemService
 from app.services.user_service import UserService
 from app.services.user_item_service import UserItemService
@@ -67,3 +69,11 @@ def get_user_item_service(
 ) -> UserItemService:
     db = postgres_db if db_source == DBSource.POSTGRES else supabase_db
     return UserItemService(UserItemRepository(db))
+
+def get_chat_service(
+    db_source: DBSource = Query(DBSource.POSTGRES, description="Database source"),
+    postgres_db: Session = Depends(get_postgres_db),
+    supabase_db: Session = Depends(get_supabase_db)
+) -> ChatService:
+    db = postgres_db if db_source == DBSource.POSTGRES else supabase_db
+    return ChatService(ChatRepository(db))

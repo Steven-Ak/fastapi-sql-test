@@ -1,11 +1,10 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-from app.api.v1.router import router
+from app.api.routers.router import router
 from app.clients.database_clients import postgres_client, supabase_client, close_all_connections
 
-# Import models to ensure they're registered with Base
-from app.models import item_model, user_item_model, user_model
+from app.models import item_model, user_item_model, user_model, chat_model
 
 
 @asynccontextmanager

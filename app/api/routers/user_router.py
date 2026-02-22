@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends
 from typing import List
 from app.models.user_model import User
 
-from app.api.auth_deps import get_current_user
+from app.auth.auth_deps import get_current_user
 from app.schemas.user_schema import UserCreate, UserResponse, UserUpdate
 from app.services.user_service import UserService
-from app.api.service_deps import get_user_service
+from app.core.service_deps import get_user_service
 
 router = APIRouter(prefix="/users", tags=["Users"], dependencies=[Depends(get_current_user)])
 

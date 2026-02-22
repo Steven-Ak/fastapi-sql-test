@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.schemas.user_schema import UserCreate, UserResponse, Token
 from app.services.user_service import UserService
-from app.api.service_deps import get_user_service
+from app.core.service_deps import get_user_service
 from app.core.security import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
