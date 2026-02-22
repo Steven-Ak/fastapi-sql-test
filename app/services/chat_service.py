@@ -24,7 +24,7 @@ class ChatService:
     def __init__(self, chat_repo: ChatRepository):
         self.chat_repo = chat_repo
     
-    def chat(self, request: ChatRequest, user_id: int, chat_id: Optional[UUID] = None) -> ChatResponse:
+    def chat(self, request: ChatRequest, user_id: UUID, chat_id: Optional[UUID] = None) -> ChatResponse:
         """Send chat request to LLM with optimized conversation context"""
         
         # --- Resolve or create chat session ---
@@ -316,22 +316,22 @@ Write a first-person summary as the assistant:"""
     
     # ----- Chat session management -----
     
-    def get_user_chats(self, user_id: int) -> List[Chat]:
+    def get_user_chats(self, user_id: UUID) -> List[Chat]:
         """List all chat sessions for a user"""
         return self.chat_repo.get_chats_by_user(user_id)
     
-    def get_chat_history(self, chat_id: UUID, user_id: int) -> Chat:
+    def get_chat_history(self, chat_id: UUID, user_id: UUID) -> Chat:
         """Get full chat history (with ownership check)"""
         return self._get_owned_chat(chat_id, user_id)
     
-    def delete_chat(self, chat_id: UUID, user_id: int) -> None:
+    def delete_chat(self, chat_id: UUID, user_id: UUID) -> None:
         """Delete a chat session (with ownership check)"""
         chat = self._get_owned_chat(chat_id, user_id)
         self.chat_repo.delete_chat(chat)
     
     # ----- Private helpers -----
     
-    def _get_owned_chat(self, chat_id: UUID, user_id: int) -> Chat:
+    def _get_owned_chat(self, chat_id: UUID, user_id: UUID) -> Chat:
         """Fetch a chat and verify ownership"""
         chat = self.chat_repo.get_chat_by_id(chat_id)
         if not chat:

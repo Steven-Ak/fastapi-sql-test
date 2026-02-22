@@ -1,3 +1,4 @@
+from uuid import UUID
 from app.services.base_service import BaseService
 from app.repositories.user_repository import UserRepository
 from app.schemas.user_schema import UserCreate, UserUpdate
@@ -34,13 +35,13 @@ class UserService(BaseService[User]):
     def get_users(self):
         return self.get_all()
     
-    def get_user(self, user_id: int):
+    def get_user(self, user_id: UUID):
         return self.get_by_id(user_id)
     
     def get_user_by_username(self, username: str):
         return self.repo.get_by_username(username)
 
-    def update_user(self, user_id: int, data: UserCreate, current_user: User):
+    def update_user(self, user_id: UUID, data: UserCreate, current_user: User):
         user = self.get_by_id(user_id)
         
         # Security: Users can only update their own account
@@ -57,7 +58,7 @@ class UserService(BaseService[User]):
         except IntegrityError:
             raise DuplicateException("User", "username or email")
         
-    def patch_user(self, user_id: int, data: UserUpdate, current_user: User):
+    def patch_user(self, user_id: UUID, data: UserUpdate, current_user: User):
         user = self.get_by_id(user_id)
         
         # Security: Users can only update their own account
@@ -79,7 +80,7 @@ class UserService(BaseService[User]):
         except IntegrityError:
             raise DuplicateException("User", "username or email")
     
-    def delete_user(self, user_id: int, current_user: User):
+    def delete_user(self, user_id: UUID, current_user: User):
         if user_id != current_user.id:
             raise ForbiddenException("You can only delete your own account")
         

@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends
 from typing import List
 
@@ -16,21 +17,21 @@ def assign_item(
 
 @router.get("/user/{user_id}", response_model=List[UserItemResponse])
 def get_user_items(
-    user_id: int,
+    user_id: UUID,
     service: UserItemService = Depends(get_user_item_service),
 ):
     return service.get_user_items(user_id)
 
 @router.get("/item/{item_id}", response_model=List[UserItemResponse])
 def get_item_users(
-    item_id: int,
+    item_id: UUID,
     service: UserItemService = Depends(get_user_item_service),
 ):
     return service.get_item_users(item_id)
 
 @router.delete("/{user_item_id}")
 def delete_assignment(
-    user_item_id: int,
+    user_item_id: UUID,
     service: UserItemService = Depends(get_user_item_service),
 ):
     service.delete(user_item_id)

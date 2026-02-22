@@ -1,3 +1,4 @@
+from uuid import UUID
 from app.services.base_service import BaseService
 from app.repositories.item_repository import ItemRepository
 from app.schemas.item_schema import ItemCreate, ItemUpdate
@@ -19,10 +20,10 @@ class ItemService(BaseService[Item]):
     def get_items(self):
         return self.get_all()
     
-    def get_item(self, item_id: int):
+    def get_item(self, item_id: UUID):
         return self.get_by_id(item_id)
 
-    def update_item(self, item_id: int, data: ItemCreate):
+    def update_item(self, item_id: UUID, data: ItemCreate):
         item = self.get_by_id(item_id)
         item.name = data.name
         item.description = data.description
@@ -31,7 +32,7 @@ class ItemService(BaseService[Item]):
         except IntegrityError:
             raise DuplicateException("Item", "name")
     
-    def patch_item(self, item_id: int, data: ItemUpdate):
+    def patch_item(self, item_id: UUID, data: ItemUpdate):
         item = self.get_by_id(item_id)
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
@@ -41,5 +42,5 @@ class ItemService(BaseService[Item]):
         except IntegrityError:
             raise DuplicateException("Item", "name")
     
-    def delete_item(self, item_id: int):
+    def delete_item(self, item_id: UUID):
         return self.delete(item_id)

@@ -3,6 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
 import json
+import io
+import pypdf
 from app.clients.storage_clients.supabase_storage import SupabaseStorage
 from fastapi import Form, File, UploadFile
 from app.schemas.chat_schema import (
@@ -34,6 +36,31 @@ async def chat(
     current_user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
 ):
+
+    # Handle file extraction first so we can append to message
+    if file and file.filename.lower().endswith('.pdf'):
+        try:
+            # Read file content
+            contents = await file.read()
+            
+            # Extract text using pypdf
+            pdf_file = io.BytesIO(contents)
+            pdf_reader = pypdf.PdfReader(pdf_file)
+            extracted_text = ""
+            for page in pdf_reader.pages:
+                extracted_text += page.extract_text() + "\n"
+            
+            # Append extracted text to message
+            message = f"{message}\n\n[Attached PDF Content]:\n{extracted_text}"
+            
+            # Reset cursor for upload
+            await file.seek(0)
+            
+        except Exception as e:
+            print(f"Error extracting PDF text: {e}")
+            # Continue without extraction, or could raise error
+            pass
+
     # Build ChatRequest
     chat_request = ChatRequest(
             messages=[{"role":"user","content":message}],
@@ -46,12 +73,22 @@ async def chat(
 
     # Handle file
     try:
+        response = service.chat(chat_request, user_id=current_user.id, chat_id=chat_request.chat_id)
+        
         file_url = None
         if file:
-            contents = await file.read()
-            file_url = storage.upload_pdf_and_get_signed_url(current_user.id, chat_request.chat_id, contents, file.filename)
+            try:
+                # If we haven't read contents yet
+                if 'contents' not in locals():
+                     contents = await file.read()
+                
+                # Use response.chat_id which is guaranteed to be set now
+                file_url = storage.upload_pdf_and_get_signed_url(current_user.id, response.chat_id, contents, file.filename)
+            except Exception as e:
+                print(f"Supabase upload failed: {e}")
+                # Don't fail the request if storage fails
+                file_url = None
 
-        response = service.chat(chat_request, user_id=current_user.id, chat_id=chat_request.chat_id)
         response.file_url = file_url
         return response
 

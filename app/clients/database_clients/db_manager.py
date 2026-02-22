@@ -27,7 +27,7 @@ def get_supabase_db():
 
 
 # Default database (for backwards compatibility)
-get_db = get_postgres_db
+get_db = get_supabase_db
 
 
 # Cleanup function (optional - for app shutdown)

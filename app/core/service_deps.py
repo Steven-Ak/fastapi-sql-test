@@ -1,6 +1,7 @@
 from fastapi import Depends, Query
 from sqlalchemy.orm import Session
 from enum import Enum
+from typing import Generator
 
 from app.clients.database_clients import get_postgres_db, get_supabase_db
 from app.repositories.chat_repository import ChatRepository
@@ -18,62 +19,27 @@ class DBSource(str, Enum):
     SUPABASE = "supabase"
 
 
-# PostgreSQL dependencies
-def get_item_service_postgres(db: Session = Depends(get_postgres_db)) -> ItemService:
+def get_db_session(
+    db_source: DBSource = Query(DBSource.POSTGRES, description="Database source")
+) -> Generator[Session, None, None]:
+    if db_source == DBSource.POSTGRES:
+        yield from get_postgres_db()
+    else:
+        yield from get_supabase_db()
+
+
+# ===== Service dependencies (all use the single session) =====
+def get_item_service(db: Session = Depends(get_db_session)) -> ItemService:
     return ItemService(ItemRepository(db))
 
 
-def get_user_service_postgres(db: Session = Depends(get_postgres_db)) -> UserService:
+def get_user_service(db: Session = Depends(get_db_session)) -> UserService:
     return UserService(UserRepository(db))
 
 
-def get_user_item_service_postgres(db: Session = Depends(get_postgres_db)) -> UserItemService:
+def get_user_item_service(db: Session = Depends(get_db_session)) -> UserItemService:
     return UserItemService(UserItemRepository(db))
 
 
-# Supabase dependencies
-def get_item_service_supabase(db: Session = Depends(get_supabase_db)) -> ItemService:
-    return ItemService(ItemRepository(db))
-
-
-def get_user_service_supabase(db: Session = Depends(get_supabase_db)) -> UserService:
-    return UserService(UserRepository(db))
-
-
-def get_user_item_service_supabase(db: Session = Depends(get_supabase_db)) -> UserItemService:
-    return UserItemService(UserItemRepository(db))
-
-# ===== Dynamic database selection =====
-def get_item_service(
-    db_source: DBSource = Query(DBSource.POSTGRES, description="Database source"),
-    postgres_db: Session = Depends(get_postgres_db),
-    supabase_db: Session = Depends(get_supabase_db)
-) -> ItemService:
-    db = postgres_db if db_source == DBSource.POSTGRES else supabase_db
-    return ItemService(ItemRepository(db))
-
-
-def get_user_service(
-    db_source: DBSource = Query(DBSource.POSTGRES, description="Database source"),
-    postgres_db: Session = Depends(get_postgres_db),
-    supabase_db: Session = Depends(get_supabase_db)
-) -> UserService:
-    db = postgres_db if db_source == DBSource.POSTGRES else supabase_db
-    return UserService(UserRepository(db))
-
-
-def get_user_item_service(
-    db_source: DBSource = Query(DBSource.POSTGRES, description="Database source"),
-    postgres_db: Session = Depends(get_postgres_db),
-    supabase_db: Session = Depends(get_supabase_db)
-) -> UserItemService:
-    db = postgres_db if db_source == DBSource.POSTGRES else supabase_db
-    return UserItemService(UserItemRepository(db))
-
-def get_chat_service(
-    db_source: DBSource = Query(DBSource.POSTGRES, description="Database source"),
-    postgres_db: Session = Depends(get_postgres_db),
-    supabase_db: Session = Depends(get_supabase_db)
-) -> ChatService:
-    db = postgres_db if db_source == DBSource.POSTGRES else supabase_db
+def get_chat_service(db: Session = Depends(get_db_session)) -> ChatService:
     return ChatService(ChatRepository(db))
