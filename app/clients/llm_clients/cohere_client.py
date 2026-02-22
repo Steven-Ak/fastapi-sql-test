@@ -171,6 +171,29 @@ class CohereClient(BaseLLMClient):
             "finish_reason": response.finish_reason,
         }
     
+    def embed(
+        self,
+        texts: List[str],
+        input_type: str = "search_document",
+    ) -> Dict[str, Any]:
+        """Embed a list of texts using Cohere's embedding model"""
+        response = self.client_v2.embed(
+            texts=texts,
+            model=settings.EMBEDDING_MODEL,
+            input_type=input_type,
+            embedding_types=["float"],
+        )
+
+        embeddings = response.embeddings.float_
+
+        return {
+            "embeddings": embeddings,
+            "model": settings.EMBEDDING_MODEL,
+            "input_type": input_type,
+            "texts_count": len(texts),
+            "embedding_dimension": len(embeddings[0]) if embeddings else 0,
+        }
+    
     @property
     def available_models(self) -> List[str]:
         return self._available_models
