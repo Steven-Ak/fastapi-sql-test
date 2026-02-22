@@ -79,6 +79,8 @@ class ChatResponse(BaseModel):
     
     # Token usage
     token_usage: TokenUsage = Field(description="Token consumption details")
+
+    file_url: Optional[str] = None
     
     # Timing
     response_time_ms: Optional[float] = Field(

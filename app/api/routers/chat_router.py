@@ -1,8 +1,10 @@
 from typing import List, Optional
 from uuid import UUID
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
-
+import json
+from app.clients.storage_clients.supabase_storage import SupabaseStorage
+from fastapi import Form, File, UploadFile
 from app.schemas.chat_schema import (
     ChatRequest, 
     ChatResponse, 
@@ -16,23 +18,43 @@ from app.models.user_model import User
 from app.auth.auth_deps import get_current_user
 from app.core.service_deps import get_chat_service
 
+storage = SupabaseStorage()
+
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 @router.post("/", response_model=ChatResponse)
-def chat(
-    request: ChatRequest,
+async def chat(
+    message: str = Form(..., description="The user message"),
+    chat_id: Optional[UUID] | None = Form(None, description="Optional chat ID"),
+    provider: str = Form("cohere", description="LLM provider"),
+    model: str | None = Form(default="", description="Optional model selection"),
+    temperature: float = Form(0.7, ge=0, le=1),
+    max_tokens: int | None = Form(1000),
+    file: UploadFile | None = File(None),
     current_user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
 ):
-    """
-    Chat with the LLM.
-    
-    - Omit `chat_id` → a new conversation is created automatically.
-    - Pass `chat_id` → the model receives all prior messages as context.
-    
-    """
+    # Build ChatRequest
+    chat_request = ChatRequest(
+            messages=[{"role":"user","content":message}],
+            chat_id=chat_id,
+            provider=provider,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+
+    # Handle file
     try:
-        return service.chat(request, user_id=current_user.id, chat_id=request.chat_id)
+        file_url = None
+        if file:
+            contents = await file.read()
+            file_url = storage.upload_pdf_and_get_signed_url(current_user.id, chat_request.chat_id, contents, file.filename)
+
+        response = service.chat(chat_request, user_id=current_user.id, chat_id=chat_request.chat_id)
+        response.file_url = file_url
+        return response
+
     except Exception as e:
         if isinstance(e, HTTPException):
             raise

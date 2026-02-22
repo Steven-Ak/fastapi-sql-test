@@ -36,7 +36,7 @@ class ChatService:
                 (m.content for m in request.messages if m.role.value == "user"), 
                 "New Chat"
             )
-            title = first_user_msg[:80] + ("..." if len(first_user_msg) > 80 else "")
+            title = self._generate_chat_title(request.messages, request.provider)
             chat = self.chat_repo.create_chat(Chat(
                 user_id=user_id,
                 title=title,
@@ -267,6 +267,52 @@ Write a first-person summary as the assistant:"""
         except Exception as e:
             print(f"❌ Failed to generate summary for chat {chat.id}: {e}")
             # Continue without summary if it fails
+
+    def _generate_chat_title(self, messages: list, provider: LLMProvider) -> str:
+        """
+        Generate a short conversation title using the LLM.
+        Uses only the first two user messages to minimize tokens.
+        """
+
+        user_messages = [m.content for m in messages if m.role.value == "user"][:2]
+
+        if not user_messages:
+            return "New Chat"
+
+        conversation = "\n".join(user_messages)
+
+        prompt = [{
+            "role": "user",
+            "content": f"""
+    Generate a very short title (max 6 words) for this conversation.
+    Do NOT use quotes.
+    Do NOT include punctuation at the end.
+
+    Conversation:
+    {conversation}
+
+    Title:
+    """
+        }]
+
+        if provider == LLMProvider.COHERE:
+            client = get_summarization_client()
+        else:
+            return "New Chat"
+
+        try:
+            result = client.chat(
+                messages=prompt,
+                temperature=0.2,
+                max_tokens=20
+            )
+
+            title = result["text"].strip().replace("\n", " ")
+            return title[:80]
+
+        except Exception:
+            return "New Chat"
+
     
     # ----- Chat session management -----
     
