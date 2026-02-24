@@ -5,10 +5,12 @@ from typing import Generator
 
 from app.clients.database_clients import get_postgres_db, get_supabase_db
 from app.repositories.chat_repository import ChatRepository
+from app.repositories.embedding_repository import EmbeddingRepository
 from app.repositories.item_repository import ItemRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.user_item_repository import UserItemRepository
 from app.services.chat_service import ChatService
+from app.services.embedding_service import EmbeddingService
 from app.services.item_service import ItemService
 from app.services.user_service import UserService
 from app.services.user_item_service import UserItemService
@@ -43,3 +45,6 @@ def get_user_item_service(db: Session = Depends(get_db_session)) -> UserItemServ
 
 def get_chat_service(db: Session = Depends(get_db_session)) -> ChatService:
     return ChatService(ChatRepository(db))
+
+def get_embedding_service(db: Session = Depends(get_db_session)) -> EmbeddingService:
+    return EmbeddingService(EmbeddingRepository(db))
