@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     DEFAULT_COHERE_MODEL: str = "command-r-plus-08-2024"
     SUMMARIZATION_MODEL: str = "command-r-08-2024"
     VISION_MODEL: str = "command-a-vision-07-2025"
+    EMBEDDING_MODEL: str = "embed-v4.0"
 
     model_config = SettingsConfigDict(
         env_file=".env",
