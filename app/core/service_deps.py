@@ -14,7 +14,7 @@ from app.services.embedding_service import EmbeddingService
 from app.services.item_service import ItemService
 from app.services.user_service import UserService
 from app.services.user_item_service import UserItemService
-from app.repositories.video_embedding_repository import VideoEmbeddingRepository
+from app.repositories.video_embedding_repository import VideoChunkRepository, VideoRepository, UserVideoRepository
 from app.services.video_embedding_service import VideoEmbeddingService
 
 
@@ -24,12 +24,12 @@ class DBSource(str, Enum):
 
 
 def get_db_session(
-    db_source: DBSource = Query(DBSource.POSTGRES, description="Database source")
+    db_source: DBSource = Query(DBSource.SUPABASE, description="Database source")
 ) -> Generator[Session, None, None]:
-    if db_source == DBSource.POSTGRES:
-        yield from get_postgres_db()
-    else:
+    if db_source == DBSource.SUPABASE:
         yield from get_supabase_db()
+    else:
+        yield from get_postgres_db()
 
 
 # ===== Service dependencies (all use the single session) =====
@@ -52,4 +52,8 @@ def get_embedding_service(db: Session = Depends(get_db_session)) -> EmbeddingSer
     return EmbeddingService(EmbeddingRepository(db))
 
 def get_video_embedding_service(db: Session = Depends(get_db_session)) -> VideoEmbeddingService:
-    return VideoEmbeddingService(VideoEmbeddingRepository(db))
+    return VideoEmbeddingService(
+        video_repo=VideoRepository(db),
+        chunk_repo=VideoChunkRepository(db),
+        user_video_repo=UserVideoRepository(db),
+    )
