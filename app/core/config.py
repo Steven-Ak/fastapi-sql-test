@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     VISION_MODEL: str = "command-a-vision-07-2025"
     EMBEDDING_MODEL: str = "embed-v4.0"
     EMBEDDING_DIMENSIONS: int = 512
+    VIDEO_CHUNK_SECONDS: int = 60
 
     model_config = SettingsConfigDict(
         env_file=".env",
