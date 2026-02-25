@@ -14,6 +14,8 @@ from app.services.embedding_service import EmbeddingService
 from app.services.item_service import ItemService
 from app.services.user_service import UserService
 from app.services.user_item_service import UserItemService
+from app.repositories.video_embedding_repository import VideoEmbeddingRepository
+from app.services.video_embedding_service import VideoEmbeddingService
 
 
 class DBSource(str, Enum):
@@ -48,3 +50,6 @@ def get_chat_service(db: Session = Depends(get_db_session)) -> ChatService:
 
 def get_embedding_service(db: Session = Depends(get_db_session)) -> EmbeddingService:
     return EmbeddingService(EmbeddingRepository(db))
+
+def get_video_embedding_service(db: Session = Depends(get_db_session)) -> VideoEmbeddingService:
+    return VideoEmbeddingService(VideoEmbeddingRepository(db))
