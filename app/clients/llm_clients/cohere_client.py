@@ -3,6 +3,7 @@ import cohere
 from app.clients.llm_clients.llm_base_client import BaseLLMClient
 from app.core.config import settings
 import base64
+from app.utils.chunking import chunk_text
 
 class CohereClient(BaseLLMClient):
     """Cohere LLM client implementation"""
@@ -175,24 +176,17 @@ class CohereClient(BaseLLMClient):
         self,
         texts: List[str],
         input_type: str = "search_document",
-    ) -> Dict[str, Any]:
+    ) -> List[List[float]]:
         """Embed a list of texts using Cohere's embedding model"""
         response = self.client_v2.embed(
             texts=texts,
             model=settings.EMBEDDING_MODEL,
             input_type=input_type,
             embedding_types=["float"],
+            output_dimension=settings.EMBEDDING_DIMENSIONS,
         )
 
-        embeddings = response.embeddings.float_
-
-        return {
-            "embeddings": embeddings,
-            "model": settings.EMBEDDING_MODEL,
-            "input_type": input_type,
-            "texts_count": len(texts),
-            "embedding_dimension": len(embeddings[0]) if embeddings else 0,
-        }
+        return response.embeddings.float_
     
     @property
     def available_models(self) -> List[str]:

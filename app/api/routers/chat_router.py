@@ -15,8 +15,6 @@ from app.schemas.chat_schema import (
     ChatHistoryResponse,
     ImageDescribeResponse,
     LLMProvider,
-    EmbedRequest,
-    EmbedResponse
 )
 from app.services.chat_service import ChatService
 from app.repositories.chat_repository import ChatRepository
@@ -142,21 +140,6 @@ async def answer_image(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.post("/embed", response_model=EmbedResponse)
-async def embed_text(
-    request: EmbedRequest,
-    current_user: User = Depends(get_current_user),
-):
-    """Embed one or more texts using Cohere's embedding model"""
-    try:
-        client = get_cohere_client()
-        result = client.embed(
-            texts=request.texts,
-            input_type=request.input_type,
-        )
-        return EmbedResponse(**result)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/sessions", response_model=List[ChatSessionResponse])
 def list_chats(

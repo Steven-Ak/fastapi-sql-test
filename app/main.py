@@ -10,12 +10,7 @@ from app.models import item_model, user_item_model, user_model, chat_model
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Create tables
-    try:
-        postgres_client.create_tables()
-        print("✅ PostgreSQL tables created")
-    except Exception as e:
-        print(f"❌ Failed to create PostgreSQL tables: {e}")
-        raise
+
     
     # Try Supabase but don't fail if it's not available
     try:
@@ -23,7 +18,6 @@ async def lifespan(app: FastAPI):
         print("✅ Supabase tables created")
     except Exception as e:
         print(f"⚠️  Supabase not available: {e}")
-        print("   App will continue with PostgreSQL only")
     
     yield
     
