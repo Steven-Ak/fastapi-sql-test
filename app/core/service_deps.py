@@ -16,6 +16,8 @@ from app.services.user_service import UserService
 from app.services.user_item_service import UserItemService
 from app.repositories.video_embedding_repository import VideoChunkRepository, VideoRepository, UserVideoRepository
 from app.services.video_embedding_service import VideoEmbeddingService
+from app.repositories.cv_repository import CVRepository, CVDetailsRepository
+from app.services.cv_service import CVService
 
 
 class DBSource(str, Enum):
@@ -56,4 +58,10 @@ def get_video_embedding_service(db: Session = Depends(get_db_session)) -> VideoE
         video_repo=VideoRepository(db),
         chunk_repo=VideoChunkRepository(db),
         user_video_repo=UserVideoRepository(db),
+    )
+
+def get_cv_service(db: Session = Depends(get_db_session)) -> CVService:
+    return CVService(
+        cv_repo=CVRepository(db),
+        cv_details_repo=CVDetailsRepository(db),
     )
