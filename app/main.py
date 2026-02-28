@@ -12,7 +12,6 @@ async def lifespan(app: FastAPI):
     # Startup: Create tables
 
     
-    # Try Supabase but don't fail if it's not available
     try:
         supabase_client.create_tables()
         print("✅ Supabase tables created")
@@ -27,7 +26,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="FastAPI CRUD Clean Architecture",
+    title="FastAPI Test Project",
     lifespan=lifespan
 )
 
