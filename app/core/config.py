@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     SUPABASE_DB_URL: str
     SUPABASE_BUCKET: str
     SUPABASE_IMG_BUCKET: str
+    SUPABASE_CV_BUCKET: str
     SUPABASE_SERVICE_ROLE_KEY: str
 
     # Controlling the model's context window and summarization behavior

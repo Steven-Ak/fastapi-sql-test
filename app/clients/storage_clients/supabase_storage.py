@@ -47,3 +47,33 @@ class SupabaseStorage:
 
         signed = self.client.storage.from_(settings.SUPABASE_IMG_BUCKET).create_signed_url(path, 60 * 60)
         return signed["signedURL"]
+    
+    def get_cv_signed_url(self, user_id) -> str:
+        path = f"{str(user_id)}/cv.pdf"
+        signed = self.client.storage.from_(settings.SUPABASE_CV_BUCKET).create_signed_url(path, 60 * 60)
+        return signed["signedURL"]
+
+    def upload_cv_and_get_path(self, user_id, file_bytes: bytes, original_name: str) -> str:
+        """Upload CV and return path instead of signed URL"""
+        ext = original_name.split(".")[-1]
+        path = f"{str(user_id)}/cv.{ext}"
+
+        try:
+            self.client.storage.from_(settings.SUPABASE_CV_BUCKET).remove([path])
+        except Exception:
+            pass
+
+        self.client.storage.from_(settings.SUPABASE_CV_BUCKET).upload(
+            path,
+            file_bytes,
+            {"content-type": "application/pdf"}
+        )
+
+        return path
+    
+    def delete_cv(self, user_id) -> None:
+        path = f"{str(user_id)}/cv.pdf"
+        try:
+            self.client.storage.from_(settings.SUPABASE_CV_BUCKET).remove([path])
+        except Exception as e:
+            print(f"Failed to delete CV from storage: {e}")
