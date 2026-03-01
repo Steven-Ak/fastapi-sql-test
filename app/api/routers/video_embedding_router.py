@@ -46,7 +46,7 @@ def embed_video(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/Get all videos", response_model=PaginatedResponse[VideoSummaryResponse])
+@router.get("/", response_model=PaginatedResponse[VideoSummaryResponse])
 def get_all_videos(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
@@ -60,7 +60,7 @@ def get_all_videos(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/Get all user videos", response_model=PaginatedResponse[UserVideoResponse])
+@router.get("/my", response_model=PaginatedResponse[UserVideoResponse])
 def get_my_videos(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
@@ -74,7 +74,7 @@ def get_my_videos(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/Get video/{video_id}", response_model=List[VideoEmbedChunkResponse])
+@router.get("/{video_id}/chunks", response_model=List[VideoEmbedChunkResponse])
 def get_video_chunks(
     video_id: UUID,
     current_user: User = Depends(get_current_user),
@@ -87,7 +87,7 @@ def get_video_chunks(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/Get chunk/{chunk_id}", response_model=VideoEmbedChunkResponse)
+@router.get("/chunks/{chunk_id}", response_model=VideoEmbedChunkResponse)
 def get_chunk(
     chunk_id: UUID,
     current_user: User = Depends(get_current_user),
@@ -102,7 +102,7 @@ def get_chunk(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/video/{video_id}/Ask about a video", response_model=VideoQuestionResponse)
+@router.post("/{video_id}/ask", response_model=VideoQuestionResponse)
 def ask_video_question(
     video_id: UUID,
     request: VideoQuestionRequest,

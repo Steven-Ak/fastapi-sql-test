@@ -1,9 +1,10 @@
 import uuid
 from supabase import create_client, Client
 from app.core.config import settings
+from app.clients.storage_clients.storage_base_client import BaseStorageClient
 
 
-class SupabaseStorage:
+class SupabaseStorage(BaseStorageClient):
     def __init__(self):
         self.client: Client = create_client(
             settings.SUPABASE_URL,

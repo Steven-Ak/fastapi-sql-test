@@ -1,37 +1,33 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.clients.database_clients import get_db
 from app.core.security import verify_token
+from app.core.exceptions import UnauthorizedException
 from app.models.user_model import User
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from app.repositories.user_repository import UserRepository
 
 security = HTTPBearer()
 
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> User:
     token = credentials.credentials
-
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    # Verify token
     user_id = verify_token(token)
     if user_id is None:
-        raise credentials_exception
-    
-    # Get user from database
-    user = db.query(User).filter(User.id == user_id).first()
+        raise UnauthorizedException("Could not validate credentials")
+
+    # Use repository layer instead of raw db.query
+    user = UserRepository(db).get_by_id(user_id)
     if user is None:
-        raise credentials_exception
-    
+        raise UnauthorizedException("Could not validate credentials")
+
     return user
 
+
 def get_current_active_user(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> User:
     return current_user

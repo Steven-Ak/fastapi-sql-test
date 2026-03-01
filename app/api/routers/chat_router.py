@@ -3,27 +3,20 @@ from uuid import UUID
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
-import json
-import io
-import pypdf
-from app.clients.storage_clients.supabase_storage import SupabaseStorage
-from fastapi import Form, File, UploadFile
+from app.core.service_deps import get_chat_service, get_storage_client
+from app.utils.pdf_extractor import extract_text_from_pdf_bytes
 from app.schemas.chat_schema import (
-    ChatRequest, 
-    ChatResponse, 
-    ChatSessionResponse, 
+    ChatRequest,
+    ChatResponse,
+    ChatSessionResponse,
     ChatHistoryResponse,
     ImageDescribeResponse,
     LLMProvider,
 )
 from app.services.chat_service import ChatService
-from app.repositories.chat_repository import ChatRepository
 from app.models.user_model import User
 from app.auth.auth_deps import get_current_user
-from app.core.service_deps import get_chat_service
-from app.clients.llm_clients.llm_manager import get_cohere_client
-
-storage = SupabaseStorage()
+from app.clients.storage_clients.storage_base_client import BaseStorageClient
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -38,59 +31,41 @@ async def chat(
     file: UploadFile | None = File(None),
     current_user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
+    storage: BaseStorageClient = Depends(get_storage_client),
 ):
-
-    # Handle file extraction first so we can append to message
-    if file and file.filename.lower().endswith('.pdf'):
+    # Extract text from attached PDF and append to the message
+    contents = None
+    if file and file.filename.lower().endswith(".pdf"):
         try:
-            # Read file content
             contents = await file.read()
-            
-            # Extract text using pypdf
-            pdf_file = io.BytesIO(contents)
-            pdf_reader = pypdf.PdfReader(pdf_file)
-            extracted_text = ""
-            for page in pdf_reader.pages:
-                extracted_text += page.extract_text() + "\n"
-            
-            # Append extracted text to message
+            extracted_text = extract_text_from_pdf_bytes(contents)
             message = f"{message}\n\n[Attached PDF Content]:\n{extracted_text}"
-            
-            # Reset cursor for upload
             await file.seek(0)
-            
         except Exception as e:
-            print(f"Error extracting PDF text: {e}")
-            # Continue without extraction, or could raise error
-            pass
+            print(f"Error reading PDF file: {e}")
 
-    # Build ChatRequest
     chat_request = ChatRequest(
-            messages=[{"role":"user","content":message}],
-            chat_id=chat_id,
-            provider=provider,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens
-        )
+        messages=[{"role": "user", "content": message}],
+        chat_id=chat_id,
+        provider=provider,
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+    )
 
-    # Handle file
     try:
         response = service.chat(chat_request, user_id=current_user.id, chat_id=chat_request.chat_id)
-        
+
         file_url = None
         if file:
             try:
-                # If we haven't read contents yet
-                if 'contents' not in locals():
-                     contents = await file.read()
-                
-                # Use response.chat_id which is guaranteed to be set now
-                file_url = storage.upload_pdf_and_get_signed_url(current_user.id, response.chat_id, contents, file.filename)
+                if contents is None:
+                    contents = await file.read()
+                file_url = storage.upload_pdf_and_get_signed_url(
+                    current_user.id, response.chat_id, contents, file.filename
+                )
             except Exception as e:
-                print(f"Supabase upload failed: {e}")
-                # Don't fail the request if storage fails
-                file_url = None
+                print(f"Storage upload failed: {e}")
 
         response.file_url = file_url
         return response
@@ -105,38 +80,24 @@ async def answer_image(
     file: UploadFile = File(...),
     prompt: str = Form("Describe this image in detail."),
     current_user: User = Depends(get_current_user),
+    service: ChatService = Depends(get_chat_service),
 ):
-    """Upload an image and get a description from Cohere's vision model"""
-    
+    """Upload an image and get a description from Cohere's vision model."""
     ALLOWED = {"image/jpeg", "image/png", "image/gif", "image/webp"}
     if file.content_type not in ALLOWED:
         raise HTTPException(status_code=400, detail=f"Unsupported type: {file.content_type}")
-    
+
     try:
         contents = await file.read()
-        
-        # Get description from vision model        
-        client = get_cohere_client()
-        result = client.answer_image(
+        file_id = uuid.uuid4()
+        return service.describe_image(
             image_bytes=contents,
             mime_type=file.content_type,
             prompt=prompt,
+            user_id=current_user.id,
+            file_id=file_id,
+            filename=file.filename,
         )
-        
-        # Upload to images bucket
-        file_id = uuid.uuid4()
-        file_url = storage.upload_image_and_get_signed_url(
-            current_user.id, 
-            file_id, 
-            contents, 
-            file.filename
-        )
-        
-        return ImageDescribeResponse(
-            description=result["text"],
-            file_url=file_url,
-        )
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
